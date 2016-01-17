@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en" xml:lang="en" dir="ltr">
+	<head>
+		<meta charset="UTF-8" />
+		<title>An alternative will be required</title>
+		<script type="text/javascript" src="../required_alternative.js"></script>
+	</head>
+	<body>
+		<form id="choice" name="choice" action="#" method="POST">
+			<fieldset id="contact" name="contact">
+				<legend>Contact</legend>
+				<table>
+					<tbody>
+						<tr>
+							<th><label for="note" title="Tooltip">Note</label></th>
+							<td><input type="text" id="note" name="contact[]" required="" /></td>
+						</tr>
+						<tr>
+							<th><label for="email">Email</label></th>
+							<td><input type="email" id="email" name="contact[]" required="" /></td>
+						</tr>
+						<tr>
+							<th><label for="tel">Phone</label></th>
+							<td><input type="tel" id="tel" name="contact[]" required="" /></td>
+						</tr>
+					</tbody>
+				</table>
+			</fieldset>
+			<fieldset id="preferences" name="preferences">
+				<legend>Preferences</legend>
+				<p><label for="foo">Foo</label><input type="checkbox" id="p_foo" name="preference[]" value="foo" required="" /></p>
+				<p><label for="bar">Bar</label><input type="checkbox" id="p_bar" name="preference[]" value="bar" /></p>
+			</fieldset>
+			<input type="submit" name="send" value="Send!" />
+		</form>
+	</body>
+</html>
