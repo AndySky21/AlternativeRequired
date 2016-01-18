@@ -24,7 +24,6 @@ document.addEventListener('DOMContentLoaded', function(done) {
 	}
  	for(var j = 0; j <= document.forms.length; j++){
 		var form = (j == document.forms.length) ? orphans : document.forms[j];
-		console.log(form.elements);
 		Object.defineProperty(form, 'ElementList', {
 			// each form will show 'live' element groups listed by name
 			get: function(){
