@@ -2,8 +2,29 @@ document.addEventListener('DOMContentLoaded', function(done) {
 	var req = ['text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'];
 	var message = 'Select or fill in at least one option';
 	// limited to elements that may be @required, excluding radio buttons / radioNodeList
-	for(var j = 0; j < document.forms.length; j++){
-		var form = document.forms[j];
+ 	var orphans = {
+		// this is for elements out of forms
+		add: function(search, stack){
+			for(var i = 0; i < search.children.length; i++){
+				var item = search.children[i];
+				if(req.indexOf(item.type) > -1){
+					if(item.form === null){
+						stack.push(item);
+					}
+				} else {
+					this.add(item, stack);
+				}
+			}
+		},
+		get elements(){
+			var stack = [];
+			this.add(document.body, stack);
+			return stack;
+		}
+	}
+ 	for(var j = 0; j <= document.forms.length; j++){
+		var form = (j == document.forms.length) ? orphans : document.forms[j];
+		console.log(form.elements);
 		Object.defineProperty(form, 'ElementList', {
 			// each form will show 'live' element groups listed by name
 			get: function(){
@@ -45,8 +66,8 @@ document.addEventListener('DOMContentLoaded', function(done) {
 					get: function(){
 						var filled = false;
 						var required = false;
-						var elm = this.element;
-						var group = elm.form.ElementList[elm.name];
+						var form = (this.element.form === null) ? orphans : this.element.form;
+						var group = form.ElementList[this.element.name];
 						for(var y = 0; y < group.length; y++){
 							filled = ((group[y].type == 'checkbox') ? group[y].checked : Boolean(group[y].value)) ? true : filled;
 							required = (group[y].required) ? true : required;
@@ -61,8 +82,9 @@ document.addEventListener('DOMContentLoaded', function(done) {
 					}
 				});
 				elm.addEventListener('invalid', function(invalid){
-					if(this.form.ElementList[this.name].length > 1){
-						var first = this.form.ElementList[this.name][0];
+					var form = (this.form === null) ? orphans : this.form;
+					if(form.ElementList[this.name].length > 1){
+						var first = form.ElementList[this.name][0];
 						var nativeValueMissing = ((this.type == 'checkbox' && !this.checked) || (this.type != 'checkbox' && !this.value) && this.required);
 						if(nativeValueMissing != this.validity.valueMissing){
 							// if a value is defined or a checkbox checked in the group, do nothing
@@ -73,7 +95,8 @@ document.addEventListener('DOMContentLoaded', function(done) {
 				elm.addEventListener(event, function(ev){
 					// custom error for elements in lists with more than 1 element
 					// gives precedence to other custom errors
-					var group = this.form.ElementList[this.name];
+					var form = (this.form === null) ? orphans : this.form;
+					var group = form.ElementList[this.name];
 					if(group.length > 1){
 						if(this.validity.valueMissing){
 							for(var z = 0; z < group.length; z++){
