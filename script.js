@@ -1,4 +1,4 @@
-document.addEventListener('DOMContentLoaded', function(done) {
+requiredAlternative = function(){
 	var req = ['text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'];
 	var message = 'Select or fill in at least one option';
 	// limited to elements that may be @required, excluding radio buttons / radioNodeList
@@ -24,8 +24,10 @@ document.addEventListener('DOMContentLoaded', function(done) {
 	}
  	for(var j = 0; j <= document.forms.length; j++){
 		var form = (j == document.forms.length) ? orphans : document.forms[j];
+		delete form.ElementList;
 		Object.defineProperty(form, 'ElementList', {
 			// each form will show 'live' element groups listed by name
+			configurable: true,
 			get: function(){
 				var list = {};
 				for(var i = 0; i < this.elements.length; i++){
@@ -42,7 +44,7 @@ document.addEventListener('DOMContentLoaded', function(done) {
 		});
 		for(var i = 0; i < form.elements.length; i++){
 			var elm = form.elements[i];
-			var event = (elm.type == 'checkbox') ? 'click' : 'input';
+			var event = (elm.type == 'checkbox') ? 'change' : 'input';
 			if(req.indexOf(elm.type) > -1){
 				// prevents native tooltips on IE and FF while correctly reporting requiredness
 				elm.dataRequired = elm.required;
@@ -117,4 +119,7 @@ document.addEventListener('DOMContentLoaded', function(done) {
 			}
 		}
 	}
+}
+document.addEventListener('DOMContentLoaded', function(done) {
+	requiredAlternative();
 });
