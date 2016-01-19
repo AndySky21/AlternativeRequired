@@ -29,7 +29,7 @@ var requiredAlternative = {
 					if(elm.form === null){
 						stack.push(elm);
 					}
-					var event = (type == 'checkbox' || type == 'select-one' type == 'select-multi') ? 'change' : 'input'; // input sometimes is not fired / too fast
+					var event = (type == 'checkbox' || type == 'select-one' || type == 'select-multi') ? 'change' : 'input'; // input sometimes is not fired / too fast
 					// prevents native tooltips on IE and FF while correctly reporting requiredness
 					elm.dataRequired = elm.required;
 					elm.required = false;
