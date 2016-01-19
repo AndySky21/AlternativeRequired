@@ -94,6 +94,8 @@ requiredAlternative = {
 	init: function(){
 	 	for(var j = -1; j < document.forms.length; j++){
 			var form = (j == -1) ? requiredAlternative.orphans : document.forms[j];
+			// first call is to requiredAlternative.orphans
+			// also overwrites properties and adds event listeners
 			if(form.ElementList !== undefined){
 				delete form.ElementList;
 			}
