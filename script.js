@@ -19,78 +19,86 @@ var requiredAlternative = {
 		}
 		return elm.validity.valueMissing;
 	},
-	orphans: {
-		// this is for elements out of forms
-		add: function(search, stack){
-			for(var i = 0; i < search.children.length; i++){
-				var elm = search.children[i];
-				var type = elm.type;
-				if(requiredAlternative.req.indexOf(type) > -1){
-					if(elm.form === null){
-						stack.push(elm);
-					}
-					var event = (type == 'checkbox' || type == 'select-one' || type == 'select-multi') ? 'change' : 'input'; // input sometimes is not fired / too fast
-					// prevents native tooltips on IE and FF while correctly reporting requiredness
-					elm.dataRequired = elm.required;
-					elm.required = false;
-					Object.defineProperty(elm, 'required', {
-						set: function(val){
-							this.dataRequired = val;
-						},
-						get: function(){
-							return this.dataRequired;
-						}
-					});
-					Object.defineProperty(elm, 'validity', {
-						// prevents UAs from reassigning 'validity' on Invalid event
-						value: {}
-					});
-					elm.validity['element'] = elm; // workaround not to define validity object from scratch
-					Object.defineProperty(elm.validity, 'valueMissing', {
-						// value will be missing if all elements in the group are empty/unchecked and any element is required - extends native
-						get: function(){
-							var filled = false;
-							var required = false;
-							var form = (this.element.form === null) ? orphans : this.element.form;
-							var group = form.ElementList[this.element.name];
-							for(var y = 0; y < group.length; y++){
-								filled = ((group[y].type == 'checkbox') ? group[y].checked : Boolean(group[y].value)) ? true : filled;
-								required = (group[y].required) ? true : required;
-							}
-							return (!filled && required);
-						}
-					});
-					Object.defineProperty(elm.validity, 'valid', {
-						// validity according to new valueMissing
-						get: function(){
-							return !(this.badInput || this.customError || this.patternMismatch || this.rangeOverflow || this.rangeUnderflow || this.stepMismatch || this.tooLong || this.tooShort || this.typeMismatch || this.valueMissing);
-						}
-					});
-					elm.addEventListener('invalid', function(invalid){
-						var form = (this.form === null) ? orphans : this.form;
-						if(form.ElementList[this.name].length > 1){
-							var first = form.ElementList[this.name][0];
-							var nativeValueMissing = ((this.type == 'checkbox' && !this.checked) || (this.type != 'checkbox' && !this.value) && this.required);
-							if(nativeValueMissing != this.validity.valueMissing){
-								// if a value is defined or a checkbox checked in the group, do nothing
-								invalid.preventDefault();
-							}
-						}
-					});
-					elm.addEventListener(event, function(ev){
-						// custom error for elements in lists with more than 1 element
-						// gives precedence to other custom errors
-						requiredAlternative.action(this, false)
-					});
-				} else {
-					this.add(elm, stack);
+	setProperty: function(elm){
+		elm.dataRequired = elm.required;
+		elm.required = false;
+		Object.defineProperty(elm, 'required', {
+			set: function(val){
+				this.dataRequired = val;
+			},
+			get: function(){
+				return this.dataRequired;
+			}
+		});
+		Object.defineProperty(elm, 'validity', {
+			// prevents UAs from reassigning 'validity' on Invalid event
+			value: {}
+		});
+		elm.validity['element'] = elm; // workaround not to define validity object from scratch
+		Object.defineProperty(elm.validity, 'valueMissing', {
+			// value will be missing if all elements in the group are empty/unchecked and any element is required - extends native
+			get: function(){
+				var filled = false;
+				var required = false;
+				var form = (this.element.form === null) ? orphans : this.element.form;
+				var group = form.ElementList[this.element.name];
+				for(var y = 0; y < group.length; y++){
+					filled = ((group[y].type == 'checkbox') ? group[y].checked : Boolean(group[y].value)) ? true : filled;
+					required = (group[y].required) ? true : required;
+				}
+				return (!filled && required);
+			}
+		});
+		Object.defineProperty(elm.validity, 'valid', {
+			// validity according to new valueMissing
+			get: function(){
+				return !(this.badInput || this.customError || this.patternMismatch || this.rangeOverflow || this.rangeUnderflow || this.stepMismatch || this.tooLong || this.tooShort || this.typeMismatch || this.valueMissing);
+			}
+		});
+	},
+	setEvent: function(elm){
+		var type = elm.type;
+		var event = (type == 'checkbox' || type == 'select-one' || type == 'select-multi') ? 'change' : 'input'; // input sometimes is not fired / too fast
+		// prevents native tooltips on IE and FF while correctly reporting requiredness
+		elm.addEventListener('invalid', function(invalid){
+			var form = (this.form === null) ? orphans : this.form;
+			if(form.ElementList[this.name].length > 1){
+				var first = form.ElementList[this.name][0];
+				var nativeValueMissing = ((this.type == 'checkbox' && !this.checked) || (this.type != 'checkbox' && !this.value) && this.required);
+				if(nativeValueMissing != this.validity.valueMissing){
+					// if a value is defined or a checkbox checked in the group, do nothing
+					invalid.preventDefault();
 				}
 			}
-		},
+		});
+		elm.addEventListener(event, function(ev){
+			// custom error for elements in lists with more than 1 element
+			// gives precedence to other custom errors
+			requiredAlternative.action(this, false);
+		});
+	},
+	add: function(search, stack){
+		if(stack === undefined){
+			stack = [];
+		}
+		for(var i = 0; i < search.children.length; i++){
+			var elm = search.children[i];
+			if(requiredAlternative.req.indexOf(elm.type) > -1){
+				if(elm.form === null){
+					stack.push(elm);
+				}
+				requiredAlternative.setProperty(elm);
+				requiredAlternative.setEvent(elm);
+			} else {
+				this.add(elm, stack);
+			}
+		}
+		return stack;
+	},
+	orphans: {
+		// this is for elements out of forms
 		get elements(){
-			var stack = [];
-			this.add(document.body, stack);
-			return stack;
+			return requiredAlternative.add(document.body);
 		}
 	},
 	init: function(){
