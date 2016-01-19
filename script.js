@@ -1,53 +1,33 @@
 requiredAlternative = {
-	orphans = {
+	req: ['text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'],
+	// limited to elements that may be @required, excluding radio buttons / radioNodeList
+	message: 'Select or fill in at least one option',
+	action: function(elm, init){
+		var form = (elm.form === null) ? orphans : elm.form;
+		var group = form.ElementList[elm.name];
+		if(group.length > 1){
+			if(elm.validity.valueMissing){
+				for(var z = 0; z < group.length; z++){
+					if(!group[z].validity.customError) group[z].setCustomValidity(requiredAlternative.message);
+				}
+			} else if(!init){
+				for(var z = 0; z < group.length; z++){
+					if(group[z].validationMessage == requiredAlternative.message) group[z].setCustomValidity('');
+				}
+			}
+		}
+		return elm.validity.valueMissing;
+	},
+	orphans: {
 		// this is for elements out of forms
 		add: function(search, stack){
 			for(var i = 0; i < search.children.length; i++){
-				var item = search.children[i];
-				if(req.indexOf(item.type) > -1){
-					if(item.form === null){
-						stack.push(item);
+				var elm = search.children[i];
+				if(requiredAlternative.req.indexOf(elm.type) > -1){
+					if(elm.form === null){
+						stack.push(elm);
 					}
-				} else {
-					this.add(item, stack);
-				}
-			}
-		},
-		get elements(){
-			var stack = [];
-			this.add(document.body, stack);
-			return stack;
-		}
-	},
-	init: function(){
-		var req = ['text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'];
-		var message = 'Select or fill in at least one option';
-		// limited to elements that may be @required, excluding radio buttons / radioNodeList
-	 	var 
-	 	for(var j = 0; j <= document.forms.length; j++){
-			var form = (j == document.forms.length) ? orphans : document.forms[j];
-			delete form.ElementList;
-			Object.defineProperty(form, 'ElementList', {
-				// each form will show 'live' element groups listed by name
-				configurable: true,
-				get: function(){
-					var list = {};
-					for(var i = 0; i < this.elements.length; i++){
-						var elm = this.elements[i];
-						if(req.indexOf(elm.type) > -1){
-							if(list[elm.name] === undefined){
-								list[elm.name] = [];
-							}
-							list[elm.name].push(elm);
-						}
-					}
-					return list;
-				}
-			});
-			for(var i = 0; i < form.elements.length; i++){
-				var elm = form.elements[i];
-				var event = (elm.type == 'checkbox') ? 'change' : 'input';
-				if(req.indexOf(elm.type) > -1){
+					var event = (elm.type == 'checkbox') ? 'change' : 'input'; // input is too fast for checkboxes
 					// prevents native tooltips on IE and FF while correctly reporting requiredness
 					elm.dataRequired = elm.required;
 					elm.required = false;
@@ -98,31 +78,49 @@ requiredAlternative = {
 					elm.addEventListener(event, function(ev){
 						// custom error for elements in lists with more than 1 element
 						// gives precedence to other custom errors
-						var form = (this.form === null) ? orphans : this.form;
-						var group = form.ElementList[this.name];
-						if(group.length > 1){
-							if(this.validity.valueMissing){
-								for(var z = 0; z < group.length; z++){
-									if(!group[z].validity.customError) group[z].setCustomValidity(message);
-								}
-							} else {
-								for(var z = 0; z < group.length; z++){
-									if(group[z].validationMessage == message) group[z].setCustomValidity('');
-								}
-							}
-						}
+						requiredAlternative.action(this, false)
 					});
-					if(form.ElementList[elm.name].length > 1){
-						if(elm.validity.valueMissing && !elm.validity.customError){
-							// sets error from the beginning, unless the group has a value
-							elm.setCustomValidity(message);
+				} else {
+					this.add(elm, stack);
+				}
+			}
+		},
+		get elements(){
+			var stack = [];
+			this.add(document.body, stack);
+			return stack;
+		}
+	},
+	init: function(){
+	 	for(var j = -1; j < document.forms.length; j++){
+			var form = (j == -1) ? requiredAlternative.orphans : document.forms[j];
+			if(form.ElementList !== undefined){
+				delete form.ElementList;
+			}
+			Object.defineProperty(form, 'ElementList', {
+				// each form will show 'live' element groups listed by name
+				configurable: true,
+				get: function(){
+					var list = {};
+					for(var i = 0; i < this.elements.length; i++){
+						var elm = this.elements[i];
+						if(requiredAlternative.req.indexOf(elm.type) > -1){
+							if(list[elm.name] === undefined){
+								list[elm.name] = [];
+							}
+							list[elm.name].push(elm);
 						}
 					}
+					return list;
 				}
+			});
+			for(var groupName in form.ElementList){
+				// initialisation error messages
+				requiredAlternative.action(form.ElementList[groupName][0], true);
 			}
 		}
 	}
 }
 document.addEventListener('DOMContentLoaded', function(done) {
-	requiredAlternative();
+	requiredAlternative.init();
 });
