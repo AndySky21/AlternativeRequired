@@ -24,11 +24,12 @@ var requiredAlternative = {
 		add: function(search, stack){
 			for(var i = 0; i < search.children.length; i++){
 				var elm = search.children[i];
-				if(requiredAlternative.req.indexOf(elm.type) > -1){
+				var type = elm.type;
+				if(requiredAlternative.req.indexOf(type) > -1){
 					if(elm.form === null){
 						stack.push(elm);
 					}
-					var event = (elm.type == 'checkbox') ? 'change' : 'input'; // input is too fast for checkboxes
+					var event = (type == 'checkbox' || type == 'select-one' type == 'select-multi') ? 'change' : 'input'; // input sometimes is not fired / too fast
 					// prevents native tooltips on IE and FF while correctly reporting requiredness
 					elm.dataRequired = elm.required;
 					elm.required = false;
