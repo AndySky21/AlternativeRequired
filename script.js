@@ -23,7 +23,6 @@ var requiredAlternative = {
 				}
 			}
 		}
-		return elm.validity.valueMissing;
 	},
 	setProperty: function(elm){
 		elm.dataRequired = elm.required;
