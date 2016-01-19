@@ -1,4 +1,5 @@
-requiredAlternative = {
+'use strict';
+var requiredAlternative = {
 	req: ['text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'],
 	// limited to elements that may be @required, excluding radio buttons / radioNodeList
 	message: 'Select or fill in at least one option',
