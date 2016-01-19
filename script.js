@@ -3,6 +3,12 @@ var requiredAlternative = {
 	req: ['text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'],
 	// limited to elements that may be @required, excluding radio buttons / radioNodeList
 	message: 'Select or fill in at least one option',
+	orphans: {
+		// this is for elements out of forms
+		get elements(){
+			return requiredAlternative.add(document.body);
+		}
+	},
 	action: function(elm, init){
 		var form = (elm.form === null) ? orphans : elm.form;
 		var group = form.ElementList[elm.name];
@@ -77,6 +83,10 @@ var requiredAlternative = {
 			requiredAlternative.action(this, false);
 		});
 	},
+	setElement: function(elm){
+		requiredAlternative.setProperty(elm);
+		requiredAlternative.setEvent(elm);
+	},
 	add: function(search, stack){
 		if(stack === undefined){
 			stack = [];
@@ -87,18 +97,39 @@ var requiredAlternative = {
 				if(elm.form === null){
 					stack.push(elm);
 				}
-				requiredAlternative.setProperty(elm);
-				requiredAlternative.setEvent(elm);
+				requiredAlternative.setElement(elm);
 			} else {
 				this.add(elm, stack);
 			}
 		}
 		return stack;
 	},
-	orphans: {
-		// this is for elements out of forms
-		get elements(){
-			return requiredAlternative.add(document.body);
+	groupElements: function(form){
+		if(form.ElementList !== undefined){
+			delete form.ElementList;
+		}
+		Object.defineProperty(form, 'ElementList', {
+			// each form will show 'live' element groups listed by name
+			configurable: true,
+			get: function(){
+				var list = {};
+				for(var i = 0; i < this.elements.length; i++){
+					var elm = this.elements[i];
+					if(requiredAlternative.req.indexOf(elm.type) > -1){
+						if(list[elm.name] === undefined){
+							list[elm.name] = [];
+						}
+						list[elm.name].push(elm);
+					}
+				}
+				return list;
+			}
+		});
+	},
+	initElements: function(form){
+		for(var groupName in form.ElementList){
+			// initialisation error messages
+			requiredAlternative.action(form.ElementList[groupName][0], true);
 		}
 	},
 	init: function(){
@@ -106,31 +137,20 @@ var requiredAlternative = {
 			var form = (j == -1) ? requiredAlternative.orphans : document.forms[j];
 			// first call is to requiredAlternative.orphans
 			// also overwrites properties and adds event listeners
-			if(form.ElementList !== undefined){
-				delete form.ElementList;
-			}
-			Object.defineProperty(form, 'ElementList', {
-				// each form will show 'live' element groups listed by name
-				configurable: true,
-				get: function(){
-					var list = {};
-					for(var i = 0; i < this.elements.length; i++){
-						var elm = this.elements[i];
-						if(requiredAlternative.req.indexOf(elm.type) > -1){
-							if(list[elm.name] === undefined){
-								list[elm.name] = [];
-							}
-							list[elm.name].push(elm);
-						}
-					}
-					return list;
-				}
-			});
-			for(var groupName in form.ElementList){
-				// initialisation error messages
-				requiredAlternative.action(form.ElementList[groupName][0], true);
-			}
+			requiredAlternative.groupElements(form);
+			requiredAlternative.initElements(form);
 		}
+	},
+	/* These methods are to be invoked in case a new control or a new form are inserted into the document */
+	insertElement: function(elm){
+		requiredAlternative.setElement(elm);
+		requiredAlternative.action(elm);
+	},
+	insertForm: function(form){
+		for(var i = 0; i < form.elements.length; i++){
+			requiredAlternative.setElement(elm);
+		}
+		requiredAlternative.initElements(form);
 	}
 }
 document.addEventListener('DOMContentLoaded', function(done) {
