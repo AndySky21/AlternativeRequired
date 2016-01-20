@@ -2,7 +2,18 @@
 var requiredAlternative = {
 	req: ['text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'],
 	// limited to elements that may be @required, excluding radio buttons / radioNodeList
-	message: 'Select or fill in at least one option',
+	message: function(){
+		var msgs = {
+			'en': "Select or fill in at least one option",
+			'fr': "Il faut choisir ou compléter au moins une option",
+			'it': "Selezionare o inserire almeno un'opzione"
+		}
+		var lang = document.documentElement.lang.split('-')[0];
+		if(lang === undefined || msgs[lang] === undefined){
+			lang = 'en';
+		}
+		return msgs[lang];
+	},
 	orphans: {
 		// this is for elements out of forms
 		get elements(){
@@ -15,11 +26,11 @@ var requiredAlternative = {
 		if(group.length > 1){
 			if(elm.validity.valueMissing){
 				for(var z = 0; z < group.length; z++){
-					if(!group[z].validity.customError) group[z].setCustomValidity(requiredAlternative.message);
+					if(!group[z].validity.customError) group[z].setCustomValidity(requiredAlternative.message());
 				}
 			} else if(!init){
 				for(var z = 0; z < group.length; z++){
-					if(group[z].validationMessage == requiredAlternative.message) group[z].setCustomValidity('');
+					if(group[z].validationMessage == requiredAlternative.message()) group[z].setCustomValidity('');
 				}
 			}
 		}
