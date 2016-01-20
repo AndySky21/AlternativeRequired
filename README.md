@@ -29,6 +29,7 @@ This script is intended to be a polyfill for such use cases:
 * insert the `<script type="text/javascript" src="`*`[path]`*`/script.js"></script>` tag in the form page, wherever you like. You don't need external libraries for it to work.
 * use the same `name` attribute value on controls which allow the user to choose. *Remember, server-side script will have to deal with values sharing the same name!* Make sure they do not overwrite each other (e.g. if processing through PHP, you can specify names ending with square brackets, like `name="foo[]"`).
 * in case of dynamically-updated pages, run `requiredAlternative.insertElement()` on newly-inserted elements. Run `requiredAlternative.insertForm()` on (guess what?!) new forms, if you insert one, instead.
+  * `test` folder provides a very basic example of how it works.
 
 ### Known issues
 - Dynamic pages must be manually updated as stated above (however I tried to make it simple :) )
@@ -38,6 +39,6 @@ This script is intended to be a polyfill for such use cases:
   - Again, as stated above, if necessary it can be extended.
 
 ### Supported languages
-English
+English, French (Français), Italian (Italiano)
 
 > Based on the author's [suggestion](https://discourse.wicg.io/t/required-attribute-and-alternatives/1260) presented to Discourse WICG.
