@@ -34,6 +34,8 @@ This script is intended to be a polyfill for such use cases:
 - Dynamic pages must be manually updated as stated above (however I tried to make it simple :) )
 - **IMPORTANT!** This script is primarily intended as a *polyfill* and it relies upon native validation, extending it to the case I had in mind. It does not replace native validation and it only works on browsers which support native validation, or coupled with libraries/plugins that faithfully reproduce native interface.
   - If anyone is interested, I could waste my time extending it to a full-fledged validation snippet. In due time everything can be done!
+- This script also relies upon up-to-date JS features, so it could not work as expected on legacy UAs.
+  - Again, as stated above, if necessary it can be extended.
 
 ### Supported languages
 English
