@@ -5,9 +5,11 @@ Allows browsers to validate alternative fields in a form, when at least one is r
 HTML5 allows authors to enable a native form validation. Easy use cases can be implemented without recurring to Javascript, while a good interface allows scripts to cover more difficult use cases easily.
 
 However, there is a quite common use case that has no native covering. Consider the following cases:
+
 1. a form requiring users to provide an email address or a phone number for further contact
 2. a mailing list subscription where at least one argument of interest must be selected
 3. a feedback form asking users to specify one or more issues in a service (with an free text alternative for unlisted options). 
+
 In all these cases there are several controls, of which at least one has to be specified (selected/checked/filled in). Users can choose to specify more than one, or even all, but if all of them are empty the form should be invalid.
 
 Although this can be achieved with some lines of code, if the web application complexity increases (e.g. form fields are added/modified, the interface is to be fully relied upon) everything becomes harder to obtain.
