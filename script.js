@@ -68,7 +68,7 @@ var requiredAlternative = {
 		Object.defineProperty(elm.validity, 'valid', {
 			// validity according to new valueMissing
 			get: function(){
-				return !(this.badInput || this.customError || this.patternMismatch || this.rangeOverflow || this.rangeUnderflow || this.stepMismatch || this.tooLong || this.tooShort || this.typeMismatch || this.valueMissing);
+				return !(this.customError || this.badInput || this.patternMismatch || this.rangeOverflow || this.rangeUnderflow || this.stepMismatch || this.tooLong || this.tooShort || this.typeMismatch || this.valueMissing);
 			}
 		});
 	},
@@ -90,7 +90,7 @@ var requiredAlternative = {
 		elm.addEventListener(event, function(ev){
 			// custom error for elements in lists with more than 1 element
 			// gives precedence to other custom errors
-			requiredAlternative.action(this, false);
+			requiredAlternative.action(this);
 		});
 	},
 	setElement: function(elm){
@@ -123,8 +123,9 @@ var requiredAlternative = {
 			configurable: true,
 			get: function(){
 				var list = {};
+				var elm;
 				for(var i = 0; i < this.elements.length; i++){
-					var elm = this.elements[i];
+					elm = this.elements[i];
 					if(requiredAlternative.req.indexOf(elm.type) > -1){
 						if(list[elm.name] === undefined){
 							list[elm.name] = [];
@@ -143,8 +144,9 @@ var requiredAlternative = {
 		}
 	},
 	init: function(){
+		var form;
 	 	for(var j = -1; j < document.forms.length; j++){
-			var form = (j == -1) ? requiredAlternative.orphans : document.forms[j];
+			form = (j == -1) ? requiredAlternative.orphans : document.forms[j];
 			// first call is to requiredAlternative.orphans
 			// also overwrites properties and adds event listeners
 			requiredAlternative.groupElements(form);
