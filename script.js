@@ -8,11 +8,15 @@ var requiredAlternative = {
 			'fr': "Il faut choisir ou compléter au moins une option",
 			'it': "Selezionare o inserire almeno un'opzione"
 		}
-		var lang = document.documentElement.lang.split('-')[0];
-		if(lang === undefined || msgs[lang] === undefined){
-			lang = 'en';
+		var msg;
+		var testlang = [navigator.language || navigator.userLanguage, document.documentElement.lang];
+		for(var i = 0; i < 2; i++){
+			msg = (testlang[i]) ? msgs[testlang[i].split('-')[0].toLowerCase()] || false : false;
+			if(msg){
+				break;
+			}
 		}
-		return msgs[lang];
+		return msg || msgs['en'];
 	},
 	orphans: {
 		// this is for elements out of forms
@@ -26,11 +30,11 @@ var requiredAlternative = {
 		if(group.length > 1){
 			if(elm.validity.valueMissing){
 				for(var z = 0; z < group.length; z++){
-					if(!group[z].validity.customError) group[z].setCustomValidity(requiredAlternative.message());
+					if(!group[z].validity.customError) group[z].setCustomValidity(requiredAlternative.msg);
 				}
 			} else if(!init){
 				for(var z = 0; z < group.length; z++){
-					if(group[z].validationMessage == requiredAlternative.message()) group[z].setCustomValidity('');
+					if(group[z].validationMessage == requiredAlternative.msg) group[z].setCustomValidity('');
 				}
 			}
 		}
@@ -165,6 +169,7 @@ var requiredAlternative = {
 		requiredAlternative.initElements(form);
 	}
 }
+requiredAlternative.msg = requiredAlternative.message();
 document.addEventListener('DOMContentLoaded', function(done) {
 	requiredAlternative.init();
 });
