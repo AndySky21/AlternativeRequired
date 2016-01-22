@@ -83,7 +83,7 @@ var requiredAlternative = {
 		elm.addEventListener('invalid', function(invalid){
 			var form = (this.form === null) ? orphans : this.form;
 			if(form.ElementList[this.name].length > 1){
-				if((this.type == 'checkbox' && !this.checked) || (this.type != 'checkbox' && !this.value) && !this.validity.valueMissing){
+				if(!this.validity.valueMissing && ((this.type == 'checkbox' && !this.checked) || (this.type != 'checkbox' && !this.value))){
 					// if a value is defined or a checkbox checked in the group, do nothing
 					// only useful for polyfills not relying upon "required" attribute
 					invalid.preventDefault();
