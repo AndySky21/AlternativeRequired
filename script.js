@@ -19,21 +19,38 @@ var requiredAlternative = {
 	},
 	orphans: {
 		// this is for elements out of forms
+		add: function(search, stack){
+			if(stack === undefined){
+				stack = [];
+			}
+			for(var i = 0; i < search.children.length; i++){
+				var elm = search.children[i];
+				if(requiredAlternative.req.indexOf(elm.type) > -1){
+					if(elm.form === null){
+						stack.push(elm);
+					}
+					requiredAlternative.setElement(elm);
+				} else {
+					this.add(elm, stack);
+				}
+			}
+			return stack;
+		},
 		get elements(){
-			return requiredAlternative.add(document.body);
+			return this.add(document.body);
 		}
 	},
 	action: function(elm, init){
-		var form = (elm.form === null) ? orphans : elm.form;
+		var form = (elm.form === null) ? this.orphans : elm.form;
 		var group = form.ElementList[elm.name];
 		if(group.length > 1){
 			if(elm.validity.valueMissing){
 				for(var z = 0; z < group.length; z++){
-					if(!group[z].validity.customError) group[z].setCustomValidity(requiredAlternative.msg);
+					if(!group[z].validity.customError) group[z].setCustomValidity(this.msg);
 				}
 			} else if(!init){
 				for(var z = 0; z < group.length; z++){
-					if(group[z].validationMessage == requiredAlternative.msg) group[z].setCustomValidity('');
+					if(group[z].validationMessage == this.msg) group[z].setCustomValidity('');
 				}
 			}
 		}
@@ -96,25 +113,8 @@ var requiredAlternative = {
 		});
 	},
 	setElement: function(elm){
-		requiredAlternative.setProperty(elm);
-		requiredAlternative.setEvent(elm);
-	},
-	add: function(search, stack){
-		if(stack === undefined){
-			stack = [];
-		}
-		for(var i = 0; i < search.children.length; i++){
-			var elm = search.children[i];
-			if(requiredAlternative.req.indexOf(elm.type) > -1){
-				if(elm.form === null){
-					stack.push(elm);
-				}
-				requiredAlternative.setElement(elm);
-			} else {
-				this.add(elm, stack);
-			}
-		}
-		return stack;
+		this.setProperty(elm);
+		this.setEvent(elm);
 	},
 	groupElements: function(form){
 		if(form.ElementList !== undefined){
@@ -142,29 +142,29 @@ var requiredAlternative = {
 	initElements: function(form){
 		for(var groupName in form.ElementList){
 			// initialisation error messages
-			requiredAlternative.action(form.ElementList[groupName][0], true);
+			this.action(form.ElementList[groupName][0], true);
 		}
 	},
 	init: function(){
 		var form;
 	 	for(var j = -1; j < document.forms.length; j++){
-			form = (j == -1) ? requiredAlternative.orphans : document.forms[j];
+			form = (j == -1) ? this.orphans : document.forms[j];
 			// first call is to requiredAlternative.orphans
 			// also overwrites properties and adds event listeners
-			requiredAlternative.groupElements(form);
-			requiredAlternative.initElements(form);
+			this.groupElements(form);
+			this.initElements(form);
 		}
 	},
 	/* These methods are to be invoked in case a new control or a new form are inserted into the document */
 	insertElement: function(elm){
-		requiredAlternative.setElement(elm);
-		requiredAlternative.action(elm);
+		this.setElement(elm);
+		this.action(elm);
 	},
 	insertForm: function(form){
 		for(var i = 0; i < form.elements.length; i++){
-			requiredAlternative.setElement(elm);
+			this.setElement(elm);
 		}
-		requiredAlternative.initElements(form);
+		this.initElements(form);
 	}
 }
 requiredAlternative.msg = requiredAlternative.message();
