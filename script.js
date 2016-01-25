@@ -8,13 +8,12 @@ var requiredAlternative = {
 			'fr': "Il faut choisir ou compléter au moins une option",
 			'it': "Selezionare o inserire almeno un'opzione"
 		}
-		var msg;
 		var testlang = [navigator.language || navigator.userLanguage, document.documentElement.lang];
-		for(var i = 0; i < 2; i++){
+		var msg;
+		var i = 0; 
+		while(!msg && testlang[i]){
 			msg = (testlang[i]) ? msgs[testlang[i].split('-')[0].toLowerCase()] || false : false;
-			if(msg){
-				break;
-			}
+			i++;
 		}
 		return msg || msgs['en'];
 	},
