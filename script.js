@@ -19,25 +19,20 @@ var requiredAlternative = {
 	},
 	orphans: {
 		// this is for elements out of forms
-		add: function(search, stack){
-			if(stack === undefined){
-				stack = [];
-			}
-			for(var i = 0; i < search.children.length; i++){
-				var elm = search.children[i];
+		get elements(){
+			var list = document.body.querySelectorAll('input, textarea, select');
+			var stack = [];
+			var elm;
+			for(var i = 0; i < list.length; i++){
+				elm = list[i];
 				if(requiredAlternative.req.indexOf(elm.type) > -1){
 					if(elm.form === null){
 						stack.push(elm);
 					}
 					requiredAlternative.setElement(elm);
-				} else {
-					this.add(elm, stack);
 				}
 			}
 			return stack;
-		},
-		get elements(){
-			return this.add(document.body);
 		}
 	},
 	action: function(elm, init){
