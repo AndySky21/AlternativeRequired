@@ -4,9 +4,9 @@ var requiredAlternative = {
 	// limited to elements that may be @required, excluding radio buttons / radioNodeList
 	message: function(){
 		var msgs = {
-			'en': "Select or fill in at least one option",
-			'fr': "Il faut choisir ou compléter au moins une option",
-			'it': "Selezionare o inserire almeno un'opzione"
+			'en': ["All the", "At least ", " field", " fields", " of this section ", "is required", "are required"],
+			'fr': ["Toutes les", "Au moins ", " zone", " zones", " de cette section ", "doit être renseignée", "doivent être renseignées"],
+			'it': ["Tutti i", "Almeno ", " campo", " campi", " di questa sezione ", "è obbligatorio", "sono obbligatori"]
 		}
 		var testlang = [navigator.language || navigator.userLanguage, document.documentElement.lang];
 		var msg;
@@ -17,152 +17,168 @@ var requiredAlternative = {
 		}
 		return msg || msgs['en'];
 	},
-	orphans: {
-		// this is for elements out of forms
-		get elements(){
-			var list = document.body.querySelectorAll('input, textarea, select');
-			var stack = [];
-			var elm;
-			for(var i = 0; i < list.length; i++){
-				elm = list[i];
-				if(requiredAlternative.req.indexOf(elm.type) > -1){
-					if(elm.form === null){
-						stack.push(elm);
-					}
-					requiredAlternative.setElement(elm);
-				}
-			}
-			return stack;
+	setMsg: function(required,length){
+		var msg;
+		if(required == length){
+			msg = this.msg[0] + this.msg[3] + this.msg[4] + this.msg[6];
+		} else {
+			var k = (required > 1);
+			msg = this.msg[1] + required + this.msg[2 + k] + this.msg[4] + this.msg[5 + k];
 		}
+		return msg;
 	},
-	action: function(elm, init){
-		var form = (elm.form === null) ? this.orphans : elm.form;
-		var group = form.ElementList[elm.name];
-		if(group.length > 1){
-			if(elm.validity.valueMissing){
-				for(var z = 0; z < group.length; z++){
-					if(!group[z].validity.customError) group[z].setCustomValidity(this.msg);
+	cycle: function(callback1,callback2,haystack,storeVar){
+		var list = haystack.querySelectorAll('input, textarea, select');
+		var result = 0;
+		var elm;
+		for(var i = 0; i < list.length; i++){
+			elm = list[i];
+			if(requiredAlternative.req.indexOf(elm.type) > -1){
+				result += this[callback1](elm);
+				if(storeVar !== undefined){
+					storeVar.push(elm);
+				}
+			} else if(callback2){
+				this[callback2](elm);
+			}
+		}
+		return result;
+	},
+	check: function(elm){
+		return (elm.type == 'checkbox') ? elm.checked : Boolean(elm.value);
+	},
+	getGroup: function(node){
+		var result = false;
+		var stack = [];
+		var fieldset = false;
+		do{
+			if(node.tagName == 'FIELDSET'){
+				fieldset = node;
+				break;
+			}
+			node = node.parentElement;
+		} while(node.tagName != 'FORM' && node.tagName != 'BODY');
+		if(fieldset){
+			var required = fieldset.dataset.required || fieldset.getAttribute('required') || null;
+			if(required !== null){
+				var filled = this.cycle('check',false,fieldset,stack)
+				required = (required == '' || isNaN(required)) ? stack.length : Math.min(stack.length, + required);
+				result = {'required': required, 'filled': filled, 'stack': stack}
+			}
+		}
+		return result;
+	},
+	action: function(elm,added){
+		var init = (elm.tagName == 'FIELDSET');
+		var result = this.getGroup(elm);
+		if(result){
+			var newMsg = this.setMsg(result.required,result.stack.length);
+			var oldMsg = (added) ? this.setMsg(result.required, result.stack.length - 1) : newMsg;
+			if(result.filled < result.required){
+				for(var z = 0; z < result.stack.length; z++){
+					// sets groupMissing error. Also removes it from controls which have been filled in
+					if(!result.stack[z].validity.customError || result.stack[z].validationMessage == oldMsg){
+						result.stack[z].setCustomValidity(this.check(result.stack[z]) ? '' : newMsg);
+					}
 				}
 			} else if(!init){
-				for(var z = 0; z < group.length; z++){
-					if(group[z].validationMessage == this.msg) group[z].setCustomValidity('');
+				// this loop will not be done on error messages initialisation
+				for(var z = 0; z < result.stack.length; z++){
+					if(result.stack[z].validationMessage == oldMsg){
+						result.stack[z].setCustomValidity('');
+					}
 				}
 			}
 		}
 	},
-	setProperty: function(elm){
-		elm.dataRequired = elm.required;
-		elm.required = false;
-		Object.defineProperty(elm, 'required', {
-			set: function(val){
-				this.dataRequired = val;
-			},
-			get: function(){
-				return this.dataRequired;
-			}
+	setEvent: function(elm){
+		var type = elm.type;
+		elm.addEventListener('change', function(ev){
+			requiredAlternative.action(this);
 		});
+	},
+	setProperty: function(elm,simple){
+		var n = 'groupMissing'
 		Object.defineProperty(elm, 'validity', {
 			// prevents UAs from reassigning 'validity' on Invalid event
 			value: {}
 		});
-		elm.validity['element'] = elm; // workaround not to define validity object from scratch
-		Object.defineProperty(elm.validity, 'valueMissing', {
-			// value will be missing if all elements in the group are empty/unchecked and any element is required - extends native
-			get: function(){
-				var filled = false;
-				var required = false;
-				var form = (this.element.form === null) ? orphans : this.element.form;
-				var group = form.ElementList[this.element.name];
-				for(var y = 0; y < group.length; y++){
-					filled = ((group[y].type == 'checkbox') ? group[y].checked : Boolean(group[y].value)) ? true : filled;
-					required = (group[y].required) ? true : required;
+		if(simple){
+			Object.defineProperty(elm.validity, n, {
+				// this is just for consistency (!)
+				enumerable: true,
+				writable: true,
+				value: false
+			});
+		} else {
+			Object.defineProperty(elm.validity, 'element', {
+				// workaround not to define Validity object from scratch
+				value: elm
+			});
+			Object.defineProperty(elm.validity, n, {
+				// value will be missing if all elements in the group are empty/unchecked and fieldset.required is truthy
+				enumerable: true,
+				get: function(){
+					var result = requiredAlternative.getGroup(this.element);
+					return (result) ? (result.filled < result.required) : false;
 				}
-				return (!filled && required);
-			}
-		});
+			});
+		}
 		Object.defineProperty(elm.validity, 'valid', {
-			// validity according to new valueMissing
+			// validity according to new groupMissing
 			get: function(){
-				return !(this.customError || this.badInput || this.patternMismatch || this.rangeOverflow || this.rangeUnderflow || this.stepMismatch || this.tooLong || this.tooShort || this.typeMismatch || this.valueMissing);
-			}
-		});
-	},
-	setEvent: function(elm){
-		var type = elm.type;
-		var event = (type == 'checkbox' || type == 'select-one' || type == 'select-multi') ? 'change' : 'input'; // input sometimes is not fired / too fast
-		// prevents native tooltips on IE and FF while correctly reporting requiredness
-		elm.addEventListener('invalid', function(invalid){
-			var form = (this.form === null) ? orphans : this.form;
-			if(form.ElementList[this.name].length > 1){
-				if(!this.validity.valueMissing && ((this.type == 'checkbox' && !this.checked) || (this.type != 'checkbox' && !this.value))){
-					// if a value is defined or a checkbox checked in the group, do nothing
-					// only useful for polyfills not relying upon "required" attribute
-					invalid.preventDefault();
+				var result = true;
+				for(var prop in this){
+					if(this[prop] && prop != 'valid'){
+						result = false;
+						break;
+					}
 				}
+				return result;
 			}
-		});
-		elm.addEventListener(event, function(ev){
-			// custom error for elements in lists with more than 1 element
-			// gives precedence to other custom errors
-			requiredAlternative.action(this);
 		});
 	},
 	setElement: function(elm){
-		this.setProperty(elm);
 		this.setEvent(elm);
+		this.setProperty(elm);
 	},
-	groupElements: function(form){
-		if(form.ElementList !== undefined){
-			delete form.ElementList;
-		}
-		Object.defineProperty(form, 'ElementList', {
-			// each form will show 'live' element groups listed by name
-			configurable: true,
+	defaultProperty: function(elm){
+		this.setProperty(elm, true);
+	},
+	setFieldset: function(fieldset){
+		Object.defineProperty(fieldset, 'required', {
+			// required in fieldset returns the minimum number of required fields
 			get: function(){
-				var list = {};
-				var elm;
-				for(var i = 0; i < this.elements.length; i++){
-					elm = this.elements[i];
-					if(requiredAlternative.req.indexOf(elm.type) > -1){
-						if(list[elm.name] === undefined){
-							list[elm.name] = [];
-						}
-						list[elm.name].push(elm);
-					}
-				}
-				return list;
+				var result = requiredAlternative.getGroup(fieldset);
+				return (result) ? result.required : false;
 			}
 		});
+		this.action(fieldset);
 	},
-	initElements: function(form){
-		for(var groupName in form.ElementList){
-			// initialisation error messages
-			this.action(form.ElementList[groupName][0], true);
+	initFieldsets: function(haystack){
+		var list = haystack.getElementsByTagName('FIELDSET');
+		for(var i = 0; i < list.length; i++){
+			this.setFieldset(list[i]);
 		}
 	},
-	init: function(){
-		var form;
-	 	for(var j = -1; j < document.forms.length; j++){
-			form = (j == -1) ? this.orphans : document.forms[j];
-			// first call is to requiredAlternative.orphans
-			// also overwrites properties and adds event listeners
-			this.groupElements(form);
-			this.initElements(form);
+	init: function(haystack){
+		if(haystack === undefined){
+			haystack = document.body;
+			this.msg = requiredAlternative.message();
 		}
+		this.cycle('setElement','defaultProperty',haystack);
+		this.initFieldsets(haystack);
 	},
 	/* These methods are to be invoked in case a new control or a new form are inserted into the document */
 	insertElement: function(elm){
+		// if an element has been added, the message to match is computed differently
 		this.setElement(elm);
-		this.action(elm);
+		this.action(elm,true);
 	},
 	insertForm: function(form){
-		for(var i = 0; i < form.elements.length; i++){
-			this.setElement(elm);
-		}
-		this.initElements(form);
+		this.init(form);
 	}
 }
-requiredAlternative.msg = requiredAlternative.message();
 document.addEventListener('DOMContentLoaded', function(done) {
 	requiredAlternative.init();
 });
