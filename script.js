@@ -1,6 +1,6 @@
 'use strict';
 var requiredAlternative = {
-	req: ['text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'],
+	req: ['fieldset','text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'],
 	// limited to elements that may be @required, excluding radio buttons / radioNodeList
 	message: function(){
 		var msgs = {
@@ -28,7 +28,8 @@ var requiredAlternative = {
 		return msg;
 	},
 	cycle: function(callback1,callback2,haystack,storeVar){
-		var list = haystack.querySelectorAll('input, textarea, select');
+		var list = haystack.querySelectorAll('fieldset, input, textarea, select, keygen, output, button');
+		// element.validity will be fixed on all elements supporting it. They call it consistency.
 		var result = 0;
 		var elm;
 		for(var i = 0; i < list.length; i++){
@@ -62,7 +63,7 @@ var requiredAlternative = {
 			var required = fieldset.dataset.required || fieldset.getAttribute('required') || null;
 			if(required !== null){
 				var filled = this.cycle('check',false,fieldset,stack)
-				required = (required == '' || isNaN(required)) ? stack.length : Math.min(stack.length, + required);
+				required = (required == '' || isNaN(required)) ? stack.length : Math.min(stack.length, parseInt(required));
 				result = {'required': required, 'filled': filled, 'stack': stack}
 			}
 		}
@@ -150,7 +151,7 @@ var requiredAlternative = {
 			// required in fieldset returns the minimum number of required fields
 			get: function(){
 				var result = requiredAlternative.getGroup(fieldset);
-				return (result) ? result.required : false;
+				return (result) ? {'number': result.required, 'elements': result.stack} : false;
 			}
 		});
 		this.action(fieldset);
