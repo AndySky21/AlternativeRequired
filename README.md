@@ -18,7 +18,7 @@ Although this can be achieved with some lines of code, if the web application co
 In short, I have suggested that all form controls allowing for a `required` attribute behave like **radio buttons**. In the case of radio button groups, the requiredness is satisfied when one of the controls sharing the same name is checked (of course there can be no more than one).
 I think that all controls should allow this. When two or more controls have the same `name` and at least one of them is `required`, the requiredness is not satisfied **if and only if** all controls are empty/unchecked/unselected.
 
-### The polyfill
+### The polyfill 
 This script is intended to be a polyfill for such use cases:
 * When more controls have the same name, the error message specifies to choose the favourite alternative
 * Like in radio button groups, `required` content attribute can be specified even on just one element in the group (however it remains a bad practice which makes the markup harder to read and maintain). IDL `required` attribute reflects the former, even if it is the group which is, in fact, required and not the elements
