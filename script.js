@@ -1,6 +1,11 @@
 'use strict';
 var requiredAlternative = {
-	req: ['fieldset','text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file','textarea','select-one','select-multi'],
+	req: [
+		'fieldset',
+		'text','search','url','tel','email','password','datetime','date','month','week','time','number','checkbox','file',
+		'textarea',
+		'select-one','select-multi'
+	],
 	// limited to elements that may be @required, excluding radio buttons / radioNodeList
 	message: function(){
 		var msgs = {
