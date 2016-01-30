@@ -51,7 +51,7 @@ var requiredAlternative = {
 	getGroup: function(node){
 		var result = false;
 		var stack = [];
-		var fieldset = false;
+		var fieldset;
 		do{
 			if(node.tagName == 'FIELDSET'){
 				fieldset = node;
