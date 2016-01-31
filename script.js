@@ -156,7 +156,7 @@ var requiredAlternative = {
 			// required in fieldset returns the minimum number of required fields
 			get: function(){
 				var result = requiredAlternative.getGroup(fieldset);
-				return (result) ? {'number': result.required, 'elements': result.stack} : false;
+				return (result) ? result.required : false;
 			}
 		});
 		this.action(fieldset);
