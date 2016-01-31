@@ -14,7 +14,7 @@ In all these cases there are several controls, of which at least one has to be s
 
 Although this can be achieved with some lines of code, if the web application complexity increases (e.g. form fields are added/modified, the interface is to be fully relied upon) everything becomes harder to obtain.
 
-In addition to this, custom error API is quite poor in HTML5. It does not easily allow scripts to distinguish between different custom errors, and in order to enable something similar to native errors, the script complexity increases exponentially, also because validation is one of the most **live** features of HTML.
+In addition to this, custom error API is quite poor in HTML5. It does not easily allow scripts to distinguish between different custom errors, and in order to enable something similar to native errors, the script complexity increases exponentially, also because validation is one of the most *live* features of HTML.
 
 ## Installation and further use
 * put the `script.js` file in the chosen directory
@@ -56,9 +56,7 @@ From the count of required fields a number of controls should be excluded:
 This script is intended to be a polyfill for such use cases:
 * When more controls are in the same fieldset, an error message asks users to specify at least a certain number of alternatives, leaving the users themselves choose which one(s) they prefer.
 * `required` content attribute on controls does not interfere with `fieldset@required`. This way there can still be required controls which must be specified, along with free choice.
-* IDL `fieldset.required` attribute returns `false` if the fieldset hasn't such requisite; otherwise it returns an object with two properties:
-  * `number`: the minimum number of elements which has to be filled in;
-  * `elements`: the list of elements taken into account for validation (namely `select` elements, `textarea` elements and a subset of `input` elements).
+* IDL `fieldset.required` attribute returns `false` if the fieldset hasn't such requisite; otherwise it returns the minimum number of elements which have to be filled in;
 * `element.validity.groupMissing` will tell you if there is an insufficient number of filled in elements. `element.validity.valid` is fixed accordingly.
 
 > Based on the author's [suggestion](https://discourse.wicg.io/t/required-attribute-and-alternatives/1260) presented to Discourse WICG.
