@@ -65,7 +65,10 @@ var requiredAlternative = {
 			// prevents UAs from reassigning 'validity' on Invalid event
 			value: {}
 		});
-		elm.validity['element'] = elm; // workaround not to define validity object from scratch
+		Object.defineProperty(elm.validity, 'element', {
+			// workaround not to define Validity object from scratch
+			value: elm
+		});
 		Object.defineProperty(elm.validity, 'valueMissing', {
 			// value will be missing if all elements in the group are empty/unchecked and any element is required - extends native
 			get: function(){
