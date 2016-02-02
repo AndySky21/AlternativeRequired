@@ -172,8 +172,8 @@ var requiredAlternative = {
 		}
 		this.initElements(haystack);
 	},
-	insertElements: function(){
-		// if an element has been added, the message to match is computed differently
+	insertControls: function(){
+		// if a control has been added, the message to match is computed differently
 		var sets = {
 			'el': [],
 			'n': []
