@@ -55,7 +55,7 @@ var requiredAlternative = {
 	},
 	getFieldset: function(node){
 		var fieldset;
-		do{
+		do {
 			if(node.tagName == 'FIELDSET'){
 				fieldset = node;
 				break;
@@ -65,22 +65,18 @@ var requiredAlternative = {
 		return fieldset;
 	},
 	getGroup: function(fieldset){
-		var result = false;
+		var r = {'required': 0, 'filled': 0, 'stack': []};
 		if(fieldset){
-			var stack = [];
-			var required = fieldset.dataset.required || fieldset.getAttribute('required');
-			if(required !== null){
-				var filled = this.cycle('check',false,fieldset,stack)
-				required = (required == '' || isNaN(required)) ? stack.length : Math.min(stack.length, parseInt(required));
-				result = {'required': required, 'filled': filled, 'stack': stack}
-			}
+			r.required = fieldset.dataset.required || (fieldset.hasAttribute('required')) ? fieldset.getAttribute('required') : 0;
+			r.filled = this.cycle('check',false,fieldset,r.stack)
+			r.required = (r.required == '' || isNaN(r.required)) ? r.stack.length : Math.min(r.stack.length, parseInt(r.required));
 		}
-		return result;
+		return r;
 	},
 	action: function(node,k){
 		var fieldset = (node.tagName == 'FIELDSET') ? node : this.getFieldset(node);
 		var result = this.getGroup(fieldset);
-		if(result){
+		if(result.required){
 			var newMsg = this.setMsg(result.required,result.stack.length);
 			var oldMsg = (k) ? this.setMsg(result.required, result.stack.length - k) : newMsg;
 			// at this point allow for error definition in parent fieldset, too
@@ -109,44 +105,56 @@ var requiredAlternative = {
 		});
 	},
 	setProperty: function(elm){
-		Object.defineProperty(elm, 'validity', {
-			// prevents UAs from reassigning 'validity' on Invalid event
-			value: {}
-		});
-		Object.defineProperty(elm.validity, this.n, {
-			// extends validity state for all elements implementing it
-			enumerable: true,
-			writable: true,
-			value: false
-		});
-		Object.defineProperty(elm.validity, 'valid', {
-			// validity according to new groupMissing
-			enumerable: true,
-			get: function(){
-				var result = true;
-				for(var prop in this){
-					if(this[prop] && prop != 'valid'){
-						result = false;
-						break;
+		var done;
+		try {
+			Object.defineProperty(elm, 'validity', {
+				// prevents UAs from reassigning 'validity' on Invalid event
+				value: {}
+			});
+			Object.defineProperty(elm.validity, 'valid', {
+				// validity according to new groupMissing
+				enumerable: true,
+				get: function(){
+					var result = true;
+					for(var prop in this){
+						if(this[prop] && prop != 'valid'){
+							result = false;
+							break;
+						}
 					}
+					return result;
 				}
-				return result;
-			}
-		});
+			});
+		} catch(e){
+			done = true;
+		}
+		if(!done){
+			Object.defineProperty(elm.validity, this.n, {
+				// extends validity state for all elements implementing it
+				enumerable: true,
+				writable: true,
+				value: false
+			});
+		};
 	},
 	setElement: function(elm){
 		this.setEvent(elm);
 		this.setProperty(elm);
 	},
 	setFieldset: function(fieldset){
-		Object.defineProperty(fieldset, 'required', {
-			// required in fieldset returns the minimum number of required fields
-			enumerable: true,
-			get: function(){
-				var result = requiredAlternative.getGroup(fieldset);
-				return (result) ? result.required : false;
-			}
-		});
+		fieldset.dataRequired = this.getGroup(fieldset).required || false;
+		try {
+			Object.defineProperty(fieldset, 'required', {
+				// required in fieldset returns the minimum number of required fields
+				enumerable: true,
+				get: function(){
+					return this.dataRequired;
+				},
+				set: function(val){
+					this.dataRequired = Math.min(requiredAlternative.getGroup(this).stack.length, parseInt(val)) || false;
+				}
+			});
+		} catch(e){}
 	},
 	initElements: function(list){
 		var add;
