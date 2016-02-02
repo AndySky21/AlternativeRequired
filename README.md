@@ -23,7 +23,7 @@ In addition to this, custom error API is quite poor in HTML5. It does not easily
 * Specify `required` attribute on the fieldset. Use `<fieldset required="x">` syntax to state that at least `x` elements must have a selected option, or checked, or filled in (don't worry if you specify `<fieldset required="42">` while the fieldset only has 4 relevant controls: it will simply mean the same as below).
   * use `<fieldset required="required">` to state that *all* the controls are required.
   * Oh, you don't like using invalid syntax? Good ol' Andy agrees: use `<fieldset data-required="x">`, it will do the same.
-* in case of dynamically-updated pages, run `requiredAlternative.insertElement()` on newly-inserted elements. Run `requiredAlternative.insertForm()` on (guess what?!) new forms, if you insert one, instead.
+* in case of dynamically-updated pages, run `requiredAlternative.insertControls()`, `requiredAlternative.insertFieldsets()` and `requiredAlternative.insertForms()` on (guess what?!) newly inserted controls, fieldsets or forms, or simply run `requiredAlternative.init()` on a modified part of the page.
   * `test` folder provides a very basic example of how it works.
 
 ### Known issues
